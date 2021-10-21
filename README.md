@@ -1,2 +1,4 @@
 # babylonJs_sample_server
-A simple nodeJs express server.
+npm i
+npm start
+localhost:80
