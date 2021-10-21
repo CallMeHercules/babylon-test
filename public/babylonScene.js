@@ -5,6 +5,7 @@ var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds(
 var square = 5;
 var tile = "tile.glb";
 var selectedMesh;
+var currentMesh;
 var selected = null;
 var meshObject;
 var playerYOffset = 1;
@@ -52,15 +53,15 @@ return scene;
 var engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
 var scene = createScene();
 var moveableTiles = [];
-var movementRange = 25; //1,3,5,7
+var movementRange = 7; //1,3,5,7
 var cameraTurnFrames = 50;
 var cameraActualFrames =0;
 var turnRadius = 1.175;
 var cameraGoal = 0.8;
 var frameCut =12;
 var camera = new BABYLON.ArcRotateCamera("camera", BABYLON.Tools.ToRadians(0), BABYLON.Tools.ToRadians(0), 5, new BABYLON.Vector3(10, 10, -10.5), scene);
-camera.lowerAlphaLimit = 0.8; //-2.35, 0.8
-camera.upperAlphaLimit = 0.8;
+// camera.lowerAlphaLimit = 0.8; //-2.35, 0.8
+// camera.upperAlphaLimit = 0.8;
 camera.lowerBetaLimit = 1.1;
 camera.upperBetaLimit = 1.1;
 camera.upperRadiusLimit = 20;
@@ -70,33 +71,7 @@ camera.attachControl(canvas, true);
 // scene.debugLayer.show();
 engine.runRenderLoop(function () {
 	if (scene) {
-		if (camera.alpha < cameraGoal && cameraGoal < 0 && cameraActualFrames < cameraTurnFrames) {
-			// console.log("turn1");
-			// cameraActualFrames++;
-			camera.lowerAlphaLimit += -turnRadius/(cameraTurnFrames-frameCut);
-			camera.upperAlphaLimit += -turnRadius/(cameraTurnFrames-frameCut);
-		}else if (camera.alpha < cameraGoal && cameraGoal > 0 && cameraActualFrames < cameraTurnFrames) {
-			// cameraActualFrames++;
-			// console.log("turn2");
-			camera.lowerAlphaLimit += turnRadius/(cameraTurnFrames-frameCut);
-			camera.upperAlphaLimit += turnRadius/(cameraTurnFrames-frameCut);
-		} else if (camera.alpha > cameraGoal && cameraGoal < 0 && cameraActualFrames < cameraTurnFrames) {
-			// cameraActualFrames++;
-			// console.log("turn3");
-			camera.lowerAlphaLimit += -turnRadius/(cameraTurnFrames-frameCut);
-			camera.upperAlphaLimit += -turnRadius/(cameraTurnFrames-frameCut);
-		} else if (camera.alpha > cameraGoal && cameraGoal > 0 && cameraActualFrames < cameraTurnFrames) {
-			// cameraActualFrames++;
-			// console.log("turn4");
-			camera.lowerAlphaLimit += -turnRadius/(cameraTurnFrames-frameCut);
-			camera.upperAlphaLimit += -turnRadius/(cameraTurnFrames-frameCut);
-		}else {
-			// console.log("else");
-			camera.lowerAlphaLimit = cameraGoal; 
-			camera.upperAlphaLimit = cameraGoal;
-			cameraActualFrames=0;
-		}
-		cameraActualFrames++;
+		
 		scene.render();
 		
 		divFps.innerHTML = engine.getFps().toFixed() + "fps";
@@ -104,9 +79,10 @@ engine.runRenderLoop(function () {
 		evt.hit = true;
 		// console.log(selected);
 			if(selected) {
-				console.log(evt.hit);
-				if (evt.pickedMesh) {
+				// console.log(evt.hit);
+				if (evt.pickedMesh || evt.mesh == currentMesh) {
 					selected = evt.pickedMesh;
+					selectedMesh = currentMesh
 				}
 				try {
 					if (selected.parent.uniqueId===meshObject.uniqueId){
@@ -149,7 +125,6 @@ engine.runRenderLoop(function () {
 				} 
 			} catch(err){
 				evt.hit = true;
-				console.log(selected);
 			}
 		}
 	}
@@ -173,6 +148,7 @@ function isMovable (mesh1, mesh2, movementRange) {
 			{
 			// mesh2.material.wireframe = true;
 			// mesh2.material.disableLighting = true;
+			mesh2.material.emissiveColor = BABYLON.Color3.Blue();
 			moveableTiles.push(mesh2);
 			return true;
 			} 
@@ -185,8 +161,8 @@ function isMovable (mesh1, mesh2, movementRange) {
 			+ (Math.abs(mesh1.position.y) - Math.abs(mesh2.parent.position.y))
 			+ (Math.abs(mesh1.position.z) - Math.abs(mesh2.parent.position.z)))) < movementRange )) 
 			{
-			// mesh2.material.wireframe = true;
-			// mesh2.material.disableLighting = true;
+			mesh2.material.wireframe = true;
+			mesh2.material.disableLighting = false;
 			moveableTiles.push(mesh2);
 			return true;
 			}
@@ -209,8 +185,10 @@ function moveCharacter (meshDestination, character){
 	}
 	catch {
 		selectedMesh = selectedMesh;
-		console.log(selectedMesh);
+		// console.log(selectedMesh);
 	}
+	currentMesh = selectedMesh;
+	selectedMesh = null;
 }
 function getGrid (fromX, fromZ, toX, toZ, scene) {
 	var finder = new PF.AStarFinder({
@@ -238,66 +216,5 @@ function sleep(delay) {
 let textBox = document.getElementById('renderCanvas');
 textBox.addEventListener('keydown', (event) => {
 	console.log(`key=${event.key},code=${event.code}`);
-	if (event.key == 7) {
-
-	}
-	if (event.key == 8) {
-		
-	}
-	if (event.key == 9) {
-		scene.spriteManagers[0].sprites[0].position.x += 2;
-	}
-	if (event.key == 4) {
-		
-	}
-	if (event.key == 5) {
-		
-	}
-	if (event.key == 6) {
-		
-	}
-	if (event.key == 1) {
-		
-	}
-	if (event.key == 2 ){
-	
-	}
-	if (event.key == 3) {
-		
-	}
-	if (event.key == 'ArrowLeft') {
-		console.log("in arrow left");
-		if (camera.lowerAlphaLimit == -2.35) {
-			console.log("prepare to turn");
-		cameraGoal = 2.35; //2.35, 0.8
-		} else if (camera.lowerAlphaLimit == -0.8) {
-			console.log("prepare to turn");
-			cameraGoal = -2.35; //2.35, 0.8
-			} else if (camera.lowerAlphaLimit == 0.8) {
-				console.log("prepare to turn");
-				cameraGoal = -0.8; //2.35, 0.8
-				} else if (camera.lowerAlphaLimit == 2.35) {
-					console.log("prepare to turn");
-					cameraGoal = 0.8; //2.35, 0.8
-				}
-				console.log(cameraGoal);
-	}
-	if (event.key == 'ArrowRight') {
-		console.log("in arrow right");
-		if (camera.lowerAlphaLimit == -2.35) {
-			console.log("prepare to turn");
-		cameraGoal = -0.8; //2.35, 0.8
-		} else if (camera.lowerAlphaLimit == -0.8) {
-			console.log("prepare to turn");
-			cameraGoal = 0.8; //2.35, 0.8
-			} else if (camera.lowerAlphaLimit == 0.8) {
-				console.log("prepare to turn");
-				cameraGoal = 2.35; //2.35, 0.8
-				} else if (camera.lowerAlphaLimit == 2.35) {
-					console.log("prepare to turn");
-					cameraGoal = -2.35;
-				}
-				console.log(cameraGoal);
-	}
 
 });
